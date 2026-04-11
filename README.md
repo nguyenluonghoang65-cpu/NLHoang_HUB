@@ -1,6 +1,6 @@
 --====================================================
 -- 👑 NGUYỄN LƯƠNG HOÀNG 8A5 👑
--- ADMIN EXPERIENCE - V4.0 ADVANCED
+-- ❤️Nguyễn Lương Hoàng Hub❤️ - V6 - Phát skibidi🐍
 --====================================================
 
 local Players = game:GetService("Players")
@@ -77,7 +77,7 @@ end)
 for i = 1, 100 do
 	barFill.Size = UDim2.new(i/100, 0, 1, 0)
 	pctText.Text = "Loading... " .. i .. "%"
-	task.wait(0.03) -- Chỉnh tốc độ loading ở đây (0.03s x 100 = khoảng 3 giây)
+	task.wait(0.01) -- Chỉnh tốc độ nhanh lại để test
 end
 
 -- Tắt Bar, Hiện Chữ Tên Màn Hình
@@ -103,13 +103,9 @@ loadGui:Destroy()
 --====================================================
 -- BẮT ĐẦU MENU ADMIN SAU KHI LOADING XONG
 --====================================================
-
--- ID tài sản cho hình ảnh của bro (thay đổi nếu cần)
 local USER_ICON_ID = "rbxassetid://13476839304" 
 
---====================================================
--- VARIABLES & SETTINGS (CẬP NHẬT)
---====================================================
+-- Variables & Settings (ĐÃ THÊM KILL AURA & FPS BOOST)
 local settings = {
 	speed = 16,
 	jump = 50,
@@ -123,7 +119,10 @@ local settings = {
 	clickTp = false,
 	autoTpTarget = nil,
 	fullbright = false,
-	optimize = false
+	optimize = false,
+	killAura = false,
+	killAuraRange = 15,
+	fpsBoost = false
 }
 
 local function getChar()
@@ -131,7 +130,7 @@ local function getChar()
 end
 
 --====================================================
--- NOTIFICATION SYSTEM (GIỮ NGUYÊN)
+-- NOTIFICATION SYSTEM
 --====================================================
 local notifGui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
 notifGui.Name = "NotifV7"
@@ -186,7 +185,7 @@ local function notify(title, text)
 end
 
 --====================================================
--- TỐI ƯU HOÁ & FULL BRIGHT LOGIC (MỚI)
+-- FPS BOOST & TỐI ƯU HOÁ LOGIC
 --====================================================
 local originalLightingSettings = {
 	Ambient = Lighting.Ambient,
@@ -235,8 +234,42 @@ local function applyOptimization(state)
 	end
 end
 
+-- DATA CACHE CHO CỰC HẠN FPS BOOST
+local fpsBoostCache = {}
+local function toggleExtremeFPSBoost(state)
+	if state then
+		for _, v in pairs(workspace:GetDescendants()) do
+			if v:IsA("BasePart") then
+				fpsBoostCache[v] = {Color = v.Color, Material = v.Material}
+				v.Material = Enum.Material.SmoothPlastic
+				v.Color = Color3.fromRGB(150, 150, 150) -- Màu xám
+			elseif v:IsA("Texture") or v:IsA("Decal") then
+				fpsBoostCache[v] = {Transparency = v.Transparency}
+				v.Transparency = 1
+			elseif v:IsA("ParticleEmitter") or v:IsA("Trail") or v:IsA("Beam") or v:IsA("Fire") or v:IsA("Smoke") or v:IsA("Sparkles") then
+				fpsBoostCache[v] = {Enabled = v.Enabled}
+				v.Enabled = false
+			end
+		end
+	else
+		for v, data in pairs(fpsBoostCache) do
+			if v.Parent then
+				if v:IsA("BasePart") then
+					v.Color = data.Color
+					v.Material = data.Material
+				elseif v:IsA("Texture") or v:IsA("Decal") then
+					v.Transparency = data.Transparency
+				elseif v:IsA("ParticleEmitter") or v:IsA("Trail") or v:IsA("Beam") or v:IsA("Fire") or v:IsA("Smoke") or v:IsA("Sparkles") then
+					v.Enabled = data.Enabled
+				end
+			end
+		end
+		fpsBoostCache = {}
+	end
+end
+
 --====================================================
--- MAIN GUI SETUP (ADMIN MENU) - CẬP NHẬT
+-- MAIN GUI SETUP
 --====================================================
 local gui = Instance.new("ScreenGui", player.PlayerGui)
 gui.Name = "AdminV7"
@@ -250,7 +283,6 @@ frame.BorderSizePixel = 0
 frame.ClipsDescendants = true
 Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 10)
 
--- RGB TOP LINE
 local rgbLine = Instance.new("Frame", frame)
 rgbLine.Size = UDim2.new(1, 0, 0, 3)
 rgbLine.BackgroundColor3 = Color3.fromRGB(0, 255, 255)
@@ -265,7 +297,6 @@ task.spawn(function()
 	end
 end)
 
--- SMOOTH DRAG FOR MAIN FRAME
 local function makeDraggable(obj)
 	local dragging, dragInput, dragStart, startPos
 	obj.InputBegan:Connect(function(input)
@@ -290,7 +321,6 @@ local function makeDraggable(obj)
 end
 makeDraggable(frame)
 
--- THU NHỎ BUTTON
 local maximized = true
 local mini = Instance.new("ImageButton", gui)
 mini.Name = "UserMinimizeBtn"
@@ -301,7 +331,6 @@ mini.BackgroundColor3 = Color3.fromRGB(30, 30, 45)
 mini.BackgroundTransparency = 0.5
 Instance.new("UICorner", mini).CornerRadius = UDim.new(0, 25) 
 
--- Tiêu đề GUI
 local titleLabel = Instance.new("TextLabel", frame)
 titleLabel.Name = "TitleHeader"
 titleLabel.Size = UDim2.new(1, -60, 0, 40)
@@ -312,7 +341,6 @@ titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 titleLabel.BackgroundTransparency = 1
 titleLabel.TextXAlignment = Enum.TextXAlignment.Left
 
--- Thu nhỏ logic
 mini.MouseButton1Click:Connect(function()
 	maximized = not maximized
 	if maximized then
@@ -325,7 +353,7 @@ mini.MouseButton1Click:Connect(function()
 end)
 
 --====================================================
--- UI COMPONENTS (TABS & BUTTONS)
+-- UI COMPONENTS
 --====================================================
 local tabContainer = Instance.new("Frame", frame)
 tabContainer.Size = UDim2.new(1, 0, 0, 50)
@@ -385,9 +413,6 @@ local function createButton(parent, text, func)
 	return b
 end
 
---====================================================
--- Ô NHẬP SPEED & JUMP
---====================================================
 local function createTextBoxSection(parent, labelText, defaultValue, placeholderText, func)
 	local frame = Instance.new("Frame", parent)
 	frame.Size = UDim2.new(1, -10, 0, 60)
@@ -407,7 +432,7 @@ local function createTextBoxSection(parent, labelText, defaultValue, placeholder
 	local textBox = Instance.new("TextBox", frame)
 	textBox.Size = UDim2.new(1, -20, 0, 30)
 	textBox.Position = UDim2.new(0, 10, 0, 25)
-	textBox.Text = defaultValue
+	textBox.Text = tostring(defaultValue)
 	textBox.PlaceholderText = placeholderText
 	textBox.Font = Enum.Font.Gotham
 	textBox.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -415,20 +440,19 @@ local function createTextBoxSection(parent, labelText, defaultValue, placeholder
 	Instance.new("UICorner", textBox).CornerRadius = UDim.new(0, 4)
 
 	textBox.FocusLost:Connect(function(enterPressed)
-		if enterPressed then
-			local value = tonumber(textBox.Text)
-			if value then
-				func(value)
-				notify(labelText, "Đã đặt thành: " .. value)
-			else
-				notify(labelText .. " LỖI", "Giá trị nhập không hợp lệ (nhập số)")
-				textBox.Text = defaultValue
-			end
+		local value = tonumber(textBox.Text)
+		if value then
+			func(value)
+			notify(labelText, "Đã đặt thành: " .. value)
+		else
+			notify(labelText .. " LỖI", "Giá trị nhập không hợp lệ (nhập số)")
+			textBox.Text = tostring(defaultValue)
 		end
 	end)
-	return frame
+	return frame, textBox
 end
 
+-- Tabs Initialization
 local mainTab = createTab("Main")
 local combatTab = createTab("Combat")
 local tpTab = createTab("Players")
@@ -446,10 +470,17 @@ createButton(miscTab, "Toggle Full Bright", function()
 	notify("Full Bright", settings.fullbright and "Đã BẬT (Loại bỏ bóng)" or "Đã TẮT")
 end)
 
-createButton(miscTab, "Toggle Game Optimization (FPS)", function()
+createButton(miscTab, "Toggle Game Optimization", function()
 	settings.optimize = not settings.optimize
 	applyOptimization(settings.optimize)
-	notify("Tối ưu hóa Game", settings.optimize and "Đã BẬT (Medium: Tắt hiệu ứng)" or "Đã TẮT")
+	notify("Tối ưu hóa Game", settings.optimize and "Đã BẬT (Medium: Tắt hiệu ứng post-process)" or "Đã TẮT")
+end)
+
+-- [TÍNH NĂNG MỚI: FPS BOOST CỰC HẠN]
+createButton(miscTab, "Toggle FPS Boost (Xám map + Tắt Animation)", function()
+	settings.fpsBoost = not settings.fpsBoost
+	toggleExtremeFPSBoost(settings.fpsBoost)
+	notify("FPS Boost", settings.fpsBoost and "Đã BẬT (Đã biến khối thành xám, xóa Animation)" or "Đã TẮT (Khôi phục đồ họa)")
 end)
 
 createTextBoxSection(mainTab, "Set WalkSpeed", settings.speed, "Nhập tốc độ chạy...", function(value)
@@ -468,7 +499,7 @@ end)
 -- PHẦN FLY, NOCLIP, TP, ESP...
 --====================================================
 local miniFlyFrame = Instance.new("Frame", gui)
-miniFlyFrame.Size = UDim2.new(0, 100, 0, 40)
+miniFlyFrame.Size = UDim2.new(0, 120, 0, 40)
 miniFlyFrame.Position = UDim2.new(0.5, 340, 0.5, -20)
 miniFlyFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 miniFlyFrame.BorderSizePixel = 0
@@ -477,7 +508,7 @@ miniFlyFrame.Visible = false
 Instance.new("UICorner", miniFlyFrame).CornerRadius = UDim.new(0, 8)
 
 local miniToggleBtn = Instance.new("TextButton", miniFlyFrame)
-miniToggleBtn.Size = UDim2.new(1, 0, 1, 0)
+miniToggleBtn.Size = UDim2.new(0.6, 0, 1, 0)
 miniToggleBtn.BackgroundTransparency = 1
 miniToggleBtn.Text = "Fly: ON"
 miniToggleBtn.TextColor3 = Color3.fromRGB(0, 255, 127)
@@ -485,19 +516,31 @@ miniToggleBtn.Font = Enum.Font.GothamBold
 miniToggleBtn.TextSize = 14
 
 local subFlyFrame = Instance.new("Frame", miniFlyFrame)
-subFlyFrame.Size = UDim2.new(0, 80, 0, 30)
-subFlyFrame.Position = UDim2.new(1, 5, 0, 5)
+subFlyFrame.Size = UDim2.new(0.4, -5, 0, 30)
+subFlyFrame.Position = UDim2.new(0.6, 0, 0, 5)
 subFlyFrame.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
 subFlyFrame.BackgroundTransparency = 0.2
 Instance.new("UICorner", subFlyFrame)
 
-local speedLabel = Instance.new("TextLabel", subFlyFrame)
-speedLabel.Size = UDim2.new(1, 0, 1, 0)
-speedLabel.BackgroundTransparency = 1
-speedLabel.Text = "Speed: " .. settings.flySpeed
-speedLabel.TextColor3 = Color3.fromRGB(0, 255, 255)
-speedLabel.Font = Enum.Font.Gotham
-speedLabel.TextSize = 10
+-- [TÍNH NĂNG MỚI: TEXTBOX CHỈNH TỐC ĐỘ BAY]
+local speedInput = Instance.new("TextBox", subFlyFrame)
+speedInput.Size = UDim2.new(1, 0, 1, 0)
+speedInput.BackgroundTransparency = 1
+speedInput.Text = tostring(settings.flySpeed)
+speedInput.TextColor3 = Color3.fromRGB(0, 255, 255)
+speedInput.Font = Enum.Font.Gotham
+speedInput.TextSize = 14
+speedInput.ClearTextOnFocus = false
+
+speedInput.FocusLost:Connect(function()
+	local val = tonumber(speedInput.Text)
+	if val then
+		settings.flySpeed = val
+		notify("Fly Speed", "Tốc độ bay đã chuyển thành: " .. val)
+	else
+		speedInput.Text = tostring(settings.flySpeed)
+	end
+end)
 
 makeDraggable(miniFlyFrame)
 
@@ -559,14 +602,6 @@ createButton(mainTab, "Toggle Noclip", function()
 	notify("Noclip", settings.noclip and "Đã BẬT đi xuyên tường" or "Đã TẮT")
 end)
 
-RunService.Stepped:Connect(function()
-	if settings.noclip then
-		for _, v in pairs(getChar():GetDescendants()) do
-			if v:IsA("BasePart") then v.CanCollide = false end
-		end
-	end
-end)
-
 createButton(mainTab, "Ctrl + Click TP", function()
 	settings.clickTp = not settings.clickTp
 	notify("Click TP", settings.clickTp and "Giữ Ctrl + Click trái để TP" or "Đã TẮT Click TP")
@@ -581,9 +616,22 @@ mouse.Button1Down:Connect(function()
 	end
 end)
 
+--====================================================
+-- COMBAT TAB (CAMLOCK & KILL AURA)
+--====================================================
 createButton(combatTab, "Toggle CamLock (Aimbot)", function()
 	settings.camLock = not settings.camLock
 	notify("CamLock", settings.camLock and "Khóa góc nhìn: BẬT" or "Đã TẮT")
+end)
+
+-- [TÍNH NĂNG MỚI: KILL AURA + TEXT BOX PHẠM VI]
+createButton(combatTab, "Toggle Kill Aura", function()
+	settings.killAura = not settings.killAura
+	notify("Kill Aura", settings.killAura and ("Đã BẬT (Phạm vi: " .. settings.killAuraRange .. ")") or "Đã TẮT")
+end)
+
+createTextBoxSection(combatTab, "Chỉnh phạm vi Kill Aura", settings.killAuraRange, "Nhập phạm vi (VD: 15)...", function(val)
+	settings.killAuraRange = val
 end)
 
 local function getClosestPlayer()
@@ -601,6 +649,35 @@ local function getClosestPlayer()
 	return target
 end
 
+--====================================================
+-- CÁC VÒNG LẶP HỆ THỐNG XỬ LÝ (RUNSERVICE)
+--====================================================
+RunService.Stepped:Connect(function()
+	-- Xử lý Noclip
+	if settings.noclip then
+		local char = player.Character
+		if char then
+			for _, v in pairs(char:GetDescendants()) do
+				if v:IsA("BasePart") then v.CanCollide = false end
+			end
+		end
+	end
+	
+	-- Xử lý đóng băng chuyển động (Animation) cho FPS Boost
+	if settings.fpsBoost then
+		for _, p in pairs(Players:GetPlayers()) do
+			if p.Character then
+				local hum = p.Character:FindFirstChild("Humanoid")
+				if hum then
+					for _, track in pairs(hum:GetPlayingAnimationTracks()) do
+						track:Stop()
+					end
+				end
+			end
+		end
+	end
+end)
+
 RunService.RenderStepped:Connect(function()
 	if settings.camLock then
 		local target = getClosestPlayer()
@@ -610,6 +687,53 @@ RunService.RenderStepped:Connect(function()
 	end
 end)
 
+RunService.Heartbeat:Connect(function()
+	-- Xử lý Auto TP
+	if settings.autoTpTarget and settings.autoTpTarget.Character then
+		local t = settings.autoTpTarget.Character:FindFirstChild("HumanoidRootPart")
+		local m = getChar():FindFirstChild("HumanoidRootPart")
+		if t and m then m.CFrame = t.CFrame * CFrame.new(0, 0, -3) end
+	end
+	
+	-- Xử lý Hitbox
+	if settings.hitbox then
+		for _, plr in pairs(Players:GetPlayers()) do
+			if plr ~= player and plr.Character then
+				local r = plr.Character:FindFirstChild("HumanoidRootPart")
+				if r then r.Size = Vector3.new(10, 10, 10) r.Transparency = 0.7 r.CanCollide = false end
+			end
+		end
+	end
+
+	-- Xử lý Kill Aura
+	if settings.killAura then
+		local char = player.Character
+		if char then
+			local hrp = char:FindFirstChild("HumanoidRootPart")
+			local tool = char:FindFirstChildOfClass("Tool")
+			if hrp and tool and tool:FindFirstChild("Handle") then
+				for _, p in pairs(Players:GetPlayers()) do
+					if p ~= player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") and p.Character:FindFirstChild("Humanoid") and p.Character.Humanoid.Health > 0 then
+						local dist = (p.Character.HumanoidRootPart.Position - hrp.Position).Magnitude
+						if dist <= settings.killAuraRange then
+							-- Tự động đánh (Dùng firetouchinterest cực chuẩn xác, backup là Tool:Activate)
+							if firetouchinterest then
+								firetouchinterest(tool.Handle, p.Character.HumanoidRootPart, 0)
+								firetouchinterest(tool.Handle, p.Character.HumanoidRootPart, 1)
+							else
+								tool:Activate()
+							end
+						end
+					end
+				end
+			end
+		end
+	end
+end)
+
+--====================================================
+-- AUTO TP & ESP DANH SÁCH NGƯỜI CHƠI
+--====================================================
 local function updatePlayerLists()
 	for _, v in pairs(tpTab:GetChildren()) do if v:IsA("TextButton") then v:Destroy() end end
 	for _, v in pairs(autoTab:GetChildren()) do if v:IsA("TextButton") then v:Destroy() end end
@@ -629,14 +753,6 @@ Players.PlayerAdded:Connect(updatePlayerLists)
 Players.PlayerRemoving:Connect(updatePlayerLists)
 updatePlayerLists()
 
-RunService.Heartbeat:Connect(function()
-	if settings.autoTpTarget and settings.autoTpTarget.Character then
-		local t = settings.autoTpTarget.Character:FindFirstChild("HumanoidRootPart")
-		local m = getChar():FindFirstChild("HumanoidRootPart")
-		if t and m then m.CFrame = t.CFrame * CFrame.new(0, 0, -3) end
-	end
-end)
-
 createButton(espTab, "Toggle ESP", function()
 	settings.esp = not settings.esp
 	for _, plr in pairs(Players:GetPlayers()) do
@@ -651,15 +767,4 @@ end)
 
 createButton(espTab, "Toggle Hitbox (10x10)", function()
 	settings.hitbox = not settings.hitbox
-end)
-
-RunService.Heartbeat:Connect(function()
-	if settings.hitbox then
-		for _, plr in pairs(Players:GetPlayers()) do
-			if plr ~= player and plr.Character then
-				local r = plr.Character:FindFirstChild("HumanoidRootPart")
-				if r then r.Size = Vector3.new(10, 10, 10) r.Transparency = 0.7 r.CanCollide = false end
-			end
-		end
-	end
-end)
+end) 
